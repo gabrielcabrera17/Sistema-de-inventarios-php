@@ -4,40 +4,49 @@
 </div>
 
 <div class="container pb-6 pt-6">
+	<?php
+			include "./inc/btn_back.php";
 
-    <p class="has-text-right pt-4 pb-4">
-            <a href="#" class="button is-link is-rounded btn-back"><- Regresar atrás</a>
-    </p>
-    <script type="text/javascript">
-        let btn_back = document.querySelector(".btn-back");
+			require_once "./php/main.php";
 
-        btn_back.addEventListener('click', function(e){
-            e.preventDefault();
-            window.history.back();
-        });
-    </script>
+			// Almacenar el id que estamos mandando mediante el metodo get o mediante la url
+			// en una variable, con un operador ternario.
+			// operador ternario = si esta variable viene definida, le asignamos el mismo valor de la url, pero sino viene definida le colocamos el valor 0 
+			$id=(isset($_GET['product_id_up'])) ? $_GET['product_id_up'] : 0 ;
+			$id=limpiar_cadena($id);
 
+			//cargar los datos desde la base de datos
+			$check_producto=conexion();
+			$check_producto=$check_producto->query("SELECT * FROM producto WHERE
+			producto_id ='$id'");
 
+			//verificar si se ha selccionado esos datos
+			// rpwCount nos dice la cantidad de producto
+			if($check_producto->rowCount()>0){
+				//solo fetch porque estamos seleccionando solo un usuario
+				$datos=$check_producto->fetch();
 
+	?>
+	<!-- en este div se mostrará la respuesta del formulario-->
 	<div class="form-rest mb-6 mt-6"></div>
 	
-	<h2 class="title has-text-centered">Nombre de producto</h2>
+	<h2 class="title has-text-centered"><?php echo $datos['producto_nombre']; ?></h2>
 
-	<form action="" method="POST" class="FormularioAjax" autocomplete="off" >
+	<form action="./php/producto_actualizar.php" method="POST" class="FormularioAjax" autocomplete="off" >
 
-		<input type="hidden" name="producto_id" required >
+		<input type="hidden" name="producto_id" required value="<?php echo $datos['producto_id']; ?>">
 
 		<div class="columns">
 		  	<div class="column">
 		    	<div class="control">
 					<label>Código de barra</label>
-				  	<input class="input" type="text" name="producto_codigo" pattern="[a-zA-Z0-9- ]{1,70}" maxlength="70" required >
+				  	<input class="input" type="text" name="producto_codigo" pattern="[a-zA-Z0-9- ]{1,70}" maxlength="70" required value="<?php echo $datos['producto_codigo']; ?>">
 				</div>
 		  	</div>
 		  	<div class="column">
 		    	<div class="control">
 					<label>Nombre</label>
-				  	<input class="input" type="text" name="producto_nombre" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,$#\-\/ ]{1,70}" maxlength="70" required >
+				  	<input class="input" type="text" name="producto_nombre" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,$#\-\/ ]{1,70}" maxlength="70" required value="<?php echo $datos['producto_nombre']; ?>">
 				</div>
 		  	</div>
 		</div>
@@ -45,21 +54,39 @@
 		  	<div class="column">
 		    	<div class="control">
 					<label>Precio</label>
-				  	<input class="input" type="text" name="producto_precio" pattern="[0-9.]{1,25}" maxlength="25" required >
+				  	<input class="input" type="text" name="producto_precio" pattern="[0-9.]{1,25}" maxlength="25" required value="<?php echo $datos['producto_precio']; ?>">
 				</div>
 		  	</div>
 		  	<div class="column">
 		    	<div class="control">
 					<label>Stock</label>
-				  	<input class="input" type="text" name="producto_stock" pattern="[0-9]{1,25}" maxlength="25" required >
+				  	<input class="input" type="text" name="producto_stock" pattern="[0-9]{1,25}" maxlength="25" required value="<?php echo $datos['producto_stock']; ?>">
 				</div>
 		  	</div>
 		  	<div class="column">
 				<label>Categoría</label><br>
 		    	<div class="select is-rounded">
 				  	<select name="producto_categoria" >
-                        <option value="1" selected="" >Nombre de categoria (Actual)</option>
-                        <option value="1" >Nombre de categoria</option>
+					    <?php
+                            $categorias=conexion();
+                            $categorias=$categorias->query("SELECT * FROM categoria");
+                            if($categorias->rowCount()>0){
+                                $categorias=$categorias->fetchAll();
+                                foreach($categorias as $row){
+									//se le agrega selected para que aparezca seleccionado por defecto
+									if($datos['categoria_id']==$row['categoria_id'] ){
+										echo '<option value="'.$row['categoria_id'].'" selected="">'.$row['categoria_nombre'].' (Actual)</option>';
+                                    
+									}else{
+
+									echo '<option value="'.$row['categoria_id'].'">'.$row['categoria_nombre'].'</option>';
+                                    }
+								}
+
+                            }
+                            $categorias=null;
+                        ?>
+
 				  	</select>
 				</div>
 		  	</div>
@@ -70,10 +97,12 @@
 	</form>
 
     
-
-    <div class="notification is-danger is-light mb-6 mt-6">
-        <strong>¡Ocurrio un error inesperado!</strong><br>
-        No podemos obtener la información solicitada
-    </div>
+	<?php
+        }else{
+            //si la categoria no existe...
+           include "./inc/error_alert.php"; 
+        }
+        $check_producto=null;
+    ?>
 
 </div>
